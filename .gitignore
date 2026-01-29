@@ -1,0 +1,35 @@
+# Ignore environment and secret files
+.env
+
+# Ignore Adobe/ADK related files (if used)
+.adk
+
+# Ignore .idea file
+.idea/
+
+# Ignore virtual environment directory or file
+.venv/
+.venv
+
+# Optional: common Python ignores
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# ignore any .lock file
+*.lock
