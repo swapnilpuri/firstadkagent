@@ -62,8 +62,7 @@ adk run sample_agent/
 #### Via Web Interface
 
 ```bash
-adk web sample_agent/
-```
+adk web ```
 
 ## 📂 Project Structure
 
