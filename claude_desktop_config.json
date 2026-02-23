@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "employee-email-agent": {
+      "command": "C:\\Personal\\codews\\multi-agents\\.venv\\Scripts\\python.exe",
+      "args": [
+        "C:\\Personal\\codews\\multi-agents\\employee_email_agent\\mcp_server1.py"
+      ],
+      "env": {}
+    }
+  },
+  "preferences": {
+    "coworkScheduledTasksEnabled": false,
+    "sidebarMode": "chat"
+  }
+}

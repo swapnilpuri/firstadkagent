@@ -2,6 +2,7 @@ import sqlite3
 from google.adk.agents.llm_agent import Agent
 from typing import List, Dict, Any
 from google.adk.models.lite_llm import LiteLlm
+from logging import basicConfig, getLogger, INFO
 
 # ────────────────────────────────────────────────
 # Database Setup (runs once when module is imported)
@@ -48,6 +49,25 @@ init_db()
 # ────────────────────────────────────────────────
 # Tools
 # ────────────────────────────────────────────────
+
+def query_employees(sqlQuery: str) -> List[Dict[str, Any]]:
+    """
+    Executes a SQL query against the employees database and returns results.
+    Args:
+        sqlQuery (str): The SQL query to execute.
+    """
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(sqlQuery)
+        getLogger("query_employees").info(f"Executed query: {sqlQuery}")
+        results = cursor.fetchall()
+        return results
+    except Exception as e:
+        print(f"Error executing query: {e}")
+        return f"Error executing query: {str(e)}"
+    finally:
+        conn.close()
 
 def get_employees(department: str= '*', geo_location: str= '*', role: str = '*') -> List[Dict[str, Any]]:
     """
@@ -101,7 +121,7 @@ root_agent = Agent(
         You are an employee communication assistant.
         RULES: 
         When asked for employees in a department and geography or role: 
-        1. Use get_employees tool to fetch the list. 
+        1. Use query_employees tool to fetch the list. 
         2. Return the list of employees (names, emails, roles) clearly to the user. 
         3. After getting results, ALWAYS format them nicely for the user (names and emails).
         NEVER output the tool schema or JSON yourself — the system will handle calling it.
@@ -111,5 +131,6 @@ root_agent = Agent(
         Be polite and confirm actions when sending emails.
         """
     ),
-    tools=[get_employees, send_email],
+    #tools=[get_employees, send_email],
+    tools=[query_employees, send_email]
 )
