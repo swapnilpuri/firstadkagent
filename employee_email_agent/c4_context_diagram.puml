@@ -1,0 +1,88 @@
+@startuml C4_Context_Diagram_Employee_Email_Agent
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+' ── Icons ──────────────────────────────────────
+!define ICONURL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master
+!include ICONURL/common.puml
+!include ICONURL/font-awesome-5/user.puml
+!include ICONURL/font-awesome-5/desktop.puml
+!include ICONURL/font-awesome-5/server.puml
+!include ICONURL/font-awesome-5/database.puml
+!include ICONURL/font-awesome-5/envelope.puml
+!include ICONURL/font-awesome-5/search.puml
+!include ICONURL/font-awesome-5/robot.puml
+
+LAYOUT_TOP_DOWN()
+LAYOUT_WITH_LEGEND()
+
+title C4 Context Diagram — Employee Email Agent System
+
+' ─────────────────────────────────────────
+' ACTORS
+' ─────────────────────────────────────────
+Person(user, "User", "Asks for employee information\nor requests sending emails.", $sprite="user")
+
+' ─────────────────────────────────────────
+' SYSTEMS
+' ─────────────────────────────────────────
+System_Boundary(claude_boundary, "Claude Desktop") {
+    Container(claude, "Claude Desktop", "Anthropic Claude", "AI assistant configured with\nMCP Server (mcp_server1.py).\nProcesses user requests and\npresents final responses.", $sprite="desktop")
+}
+
+System_Boundary(mcp_boundary, "MCP Layer") {
+    Container(mcp_server, "mcp_server1.py", "FastMCP / stdio transport", "Exposes agent tools as MCP-compatible\nendpoints for Claude Desktop.\nTools: query_employees_tool, send_email_impl", $sprite="server")
+}
+
+System_Boundary(agent_boundary, "Employee Email Agent (employee_email_agent)") {
+
+    Component(query_tool, "query_employees", "Python Tool", "Executes any SQL query against\nthe employees SQLite database.\nReturns List[Dict[str, Any]].", $sprite="search")
+
+    Component(email_tool, "send_email", "Python Tool", "Simulates sending an email\nto an employee with name,\nemail, subject and body.", $sprite="envelope")
+}
+
+System_Boundary(db_boundary, "Data Layer") {
+    ContainerDb(sqlite_db, "employees.db", "SQLite Database", "Stores employee records.\nTable: employees\nColumns: id, name, email,\ndepartment, geo_location, role", $sprite="database")
+}
+
+' ─────────────────────────────────────────
+' RELATIONSHIPS — Happy Path Flow
+' ─────────────────────────────────────────
+
+' Step 1: User asks Claude
+Rel_D(user, claude, "1. Asks for employee information", "Natural Language")
+
+' Step 2: Claude uses MCP Server
+Rel_D(claude, mcp_server, "2. Invokes MCP tool via\nconfigured MCP Server", "stdio / MCP Protocol")
+
+' Step 3: MCP Server delegates to agent tool
+Rel_D(mcp_server, query_tool, "3. Calls query_employees_tool\n(passes SQL query)", "Python Function Call")
+
+' Step 4: Tool queries the database
+Rel_D(query_tool, sqlite_db, "4. Executes SQL query\n(SELECT / DELETE / UPDATE)", "SQLite / sqlite3")
+
+' Step 5: DB returns results to tool
+Rel_U(sqlite_db, query_tool, "5. Returns rows as\nList[Dict[str, Any]]", "SQLite Result Set")
+
+' Step 6: Tool returns to MCP server
+Rel_U(query_tool, mcp_server, "6. Returns structured\nemployee data", "Python Return Value")
+
+' Step 7: MCP server returns to Claude
+Rel_U(mcp_server, claude, "7. Returns tool result\nto Claude Desktop", "MCP Protocol Response")
+
+' Step 8: Claude responds to user
+Rel_U(claude, user, "8. Formats and presents\nemployee list to user", "Natural Language Response")
+
+' ─────────────────────────────────────────
+' OPTIONAL EMAIL FLOW
+' ─────────────────────────────────────────
+Rel_D(mcp_server, email_tool, "Optional: Calls send_email_impl\n(only on explicit user request)", "Python Function Call")
+Rel_U(email_tool, mcp_server, "Returns email confirmation\nmessage", "Python Return Value")
+
+' Agent relationship (informational)
+' Rel(mcp_server, agent, "Wraps tools from\nemployee_email_agent", "Import / Python Module")
+
+@enduml
+
